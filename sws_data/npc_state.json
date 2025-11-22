@@ -1,0 +1,22 @@
+{
+  "npc_guide_elara": {
+    "current_mood": "friendly",
+    "current_schedule_index": 1,
+    "last_interaction_player_id": "default_player",
+    "last_interaction_time": 1732012550,
+    "internal_state_data": {
+      "greeting_given_today": true,
+      "quest_item_delivered": false
+    }
+  },
+  "npc_monster_goblin": {
+    "current_mood": "aggressive",
+    "current_schedule_index": 0, // Always patrolling
+    "last_known_player_location": { "x": 100, "y": 0, "z": -50 },
+    "internal_state_data": {
+      "aggro_target": "default_player",
+      "health_at_spawn": 50,
+      "current_health": 30
+    }
+  }
+}

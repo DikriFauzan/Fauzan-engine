@@ -1,0 +1,83 @@
+{
+  "id": "physics_manifest_example_1",
+  "name": "Standard Physics Profile",
+  "description": "Default physics settings for Eldoria Prime world.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1704067200,
+  "physics": {
+    "global": {
+      "gravity": { "x": 0.0, "y": -9.8, "z": 0.0 },
+      "default_friction": 1.0,
+      "default_bounce": 0.0,
+      "default_density": 1.0
+    },
+    "collision_layers": {
+      "player": 1,
+      "monster": 2,
+      "environment": 4,
+      "item": 8,
+      "projectile": 16
+    },
+    "collision_masks": {
+      "player": 6, // Collides with monster (2) and environment (4)
+      "monster": 5, // Collides with player (1) and environment (4)
+      "environment": 31, // Collides with everything (1+2+4+8+16)
+      "item": 1, // Only collides with player (1)
+      "projectile": 6 // Collides with monster (2) and environment (4)
+    },
+    "materials": [
+      {
+        "id": "material_ice",
+        "name": "Slippery Ice",
+        "friction": 0.1,
+        "bounce": 0.05
+      },
+      {
+        "id": "material_sand",
+        "name": "Loose Sand",
+        "friction": 2.0,
+        "bounce": 0.0
+      },
+      {
+        "id": "material_wood",
+        "name": "Wood Planks",
+        "friction": 0.8,
+        "bounce": 0.01
+      }
+    ],
+    "profiles": {
+      "character_player": {
+        "shape": "capsule",
+        "height": 2.0,
+        "radius": 0.5,
+        "mass": 75.0,
+        "friction": 1.0,
+        "bounce": 0.0,
+        "collision_layer": 1,
+        "collision_mask": 6
+      },
+      "character_monster_goblin": {
+        "shape": "capsule",
+        "height": 1.2,
+        "radius": 0.4,
+        "mass": 30.0,
+        "friction": 1.0,
+        "bounce": 0.0,
+        "collision_layer": 2,
+        "collision_mask": 5
+      },
+      "object_barrel": {
+        "shape": "cylinder",
+        "height": 1.0,
+        "radius": 0.5,
+        "mass": 20.0,
+        "friction": 0.5,
+        "bounce": 0.1,
+        "collision_layer": 4,
+        "collision_mask": 31,
+        "is_static": false
+      }
+    }
+  }
+}

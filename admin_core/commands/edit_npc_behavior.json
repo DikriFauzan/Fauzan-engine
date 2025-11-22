@@ -1,0 +1,54 @@
+{
+  "id": "command_blueprint_edit_npc_behavior_1",
+  "name": "Edit NPC Behavior Command Blueprint",
+  "description": "Blueprint defining the structure for the 'edit_npc_behavior' command.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1732012800,
+  "command": {
+    "type": "npc.modify_behavior",
+    "name": "edit_npc_behavior",
+    "description": "Modifies the behavior parameters or schedule of an NPC.",
+    "parameters": [
+      {
+        "name": "npc_id",
+        "type": "string",
+        "required": true,
+        "description": "The unique identifier of the NPC."
+      },
+      {
+        "name": "new_behavior_type",
+        "type": "string",
+        "required": false,
+        "description": "Optional: Change the NPC's behavior type (e.g., state_machine, behavior_tree).",
+        "allowed_values": ["state_machine", "behavior_tree", "custom_script"]
+      },
+      {
+        "name": "new_mood",
+        "type": "string",
+        "required": false,
+        "description": "Optional: Set a new default mood for the NPC.",
+        "allowed_values": ["friendly", "hostile", "neutral", "aggressive", "sad", "happy", "angry"]
+      },
+      {
+        "name": "new_schedule",
+        "type": "array",
+        "required": false,
+        "description": "Optional: Replace the NPC's daily schedule.",
+        "item_type": "object",
+        "item_schema": {
+          "start_time": { "type": "number", "description": "Start time in seconds from day start (0-86400)" },
+          "end_time": { "type": "number", "description": "End time in seconds from day start (0-86400)" },
+          "action": { "type": "string", "description": "Action during this time" },
+          "location": { "type": "string", "description": "Location for the action" }
+        }
+      }
+    ],
+    "example_usage": "/edit_npc_behavior npc_id=npc_guide_elara new_mood=happy",
+    "execution_context": {
+      "requires_admin_privileges": true,
+      "affects_shared_world_state": true,
+      "target_system": "NPCBrainAgent" // Or NPCBehaviorAgent
+    }
+  }
+}

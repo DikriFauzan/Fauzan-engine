@@ -1,0 +1,39 @@
+{
+  "id": "command_blueprint_change_price_1",
+  "name": "Change Item Price Command Blueprint",
+  "description": "Blueprint defining the structure for the 'change_price' command.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1732012800,
+  "command": {
+    "type": "economy.adjust_price",
+    "name": "change_price",
+    "description": "Changes the buy/sell price of an item in the market.",
+    "parameters": [
+      {
+        "name": "item_id",
+        "type": "string",
+        "required": true,
+        "description": "The unique identifier of the item."
+      },
+      {
+        "name": "new_buy_price",
+        "type": "number",
+        "required": false,
+        "description": "The new buy price for the item. If omitted, current price is unchanged."
+      },
+      {
+        "name": "new_sell_price",
+        "type": "number",
+        "required": false,
+        "description": "The new sell price for the item. If omitted, current price is unchanged."
+      }
+    ],
+    "example_usage": "/change_price item_id=health_potion new_buy_price=12 new_sell_price=6",
+    "execution_context": {
+      "requires_admin_privileges": true,
+      "affects_shared_world_state": true,
+      "target_system": "EconomyAgent"
+    }
+  }
+}

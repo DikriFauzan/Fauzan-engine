@@ -1,0 +1,72 @@
+{
+  "id": "npc_manifest_example_1",
+  "name": "NPC Definitions for Eldoria",
+  "description": "Definitions for Non-Player Characters in Eldoria Prime.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1704067200,
+  "npcs": [
+    {
+      "id": "npc_guide_elara",
+      "name": "Elara the Guide",
+      "description": "A friendly NPC who helps new players.",
+      "character_type": "npc",
+      "model_path": "res://assets/models/npc_guide.tscn",
+      "default_mood": "friendly",
+      "personality": "helpful",
+      "behavior_type": "state_machine",
+      "ai_params": {
+        "aggression": 0,
+        "friendliness": 10,
+        "chattiness": 8
+      },
+      "dialogue_tree": "dialogue_tree_guide_elara.json",
+      "schedule": [
+        { "start_time": 0, "end_time": 43200, "action": "sleep", "location": "home_elara" },
+        { "start_time": 43200, "end_time": 75600, "action": "patrol", "location": "village_center" },
+        { "start_time": 75600, "end_time": 86400, "action": "rest", "location": "inn_elara" }
+      ],
+      "inventory": {
+        "items": [
+          { "name": "Health Potion", "quantity": 5 },
+          { "name": "Guide's Map", "quantity": 1 }
+        ],
+        "gold": 100
+      },
+      "quests": ["quest_tutorial_01", "quest_find_crystal_01"]
+    },
+    {
+      "id": "npc_monster_goblin",
+      "name": "Forest Goblin",
+      "description": "A small, aggressive monster found in forests.",
+      "character_type": "monster",
+      "model_path": "res://assets/models/monster_goblin.tscn",
+      "default_mood": "aggressive",
+      "personality": "hostile",
+      "behavior_type": "behavior_tree",
+      "ai_params": {
+        "aggression": 8,
+        "friendliness": 0,
+        "chattiness": 0
+      },
+      "dialogue_tree": null,
+      "schedule": [
+        { "start_time": 0, "end_time": 86400, "action": "patrol", "location": "region_forest_a" }
+      ],
+      "inventory": {
+        "items": [
+          { "name": "Rusty Dagger", "quantity": 1 },
+          { "name": "Goblin Ear", "quantity": 0 }
+        ],
+        "gold": 5
+      },
+      "quests": [],
+      "combat": {
+        "health": 50,
+        "attack_power": 15,
+        "defense": 5,
+        "skills": ["attack_basic", "flee_if_low_health"]
+      }
+    }
+  ]
+}

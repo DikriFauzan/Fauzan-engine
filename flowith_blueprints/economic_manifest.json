@@ -1,0 +1,113 @@
+{
+  "id": "economic_manifest_example_1",
+  "name": "Economy Profile for Eldoria",
+  "description": "Defines the economic system, including prices, crafting, and resource flow.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1704067200,
+  "economy": {
+    "currencies": [
+      {
+        "id": "currency_gold",
+        "name": "Gold",
+        "symbol": "G",
+        "type": "standard",
+        "initial_player_amount": 100
+      },
+      {
+        "id": "currency_premium",
+        "name": "Eldorian Crystal",
+        "symbol": "EC",
+        "type": "premium",
+        "initial_player_amount": 0
+      }
+    ],
+    "market_prices": {
+      "item_health_potion": { "buy_price": 10, "sell_price": 5 },
+      "item_mana_potion": { "buy_price": 15, "sell_price": 7 },
+      "item_wood_log": { "buy_price": 2, "sell_price": 1 },
+      "item_iron_ore": { "buy_price": 20, "sell_price": 10 },
+      "item_basic_sword": { "buy_price": 100, "sell_price": 50 }
+    },
+    "crafting_recipes": [
+      {
+        "id": "recipe_wooden_sword",
+        "name": "Wooden Sword",
+        "output_item": "item_wooden_sword",
+        "output_quantity": 1,
+        "resources_required": [
+          { "item_id": "item_wood_log", "quantity": 5 }
+        ],
+        "time_required_seconds": 60,
+        "skill_required": "crafting_basic",
+        "station_required": "workbench_basic"
+      },
+      {
+        "id": "recipe_health_potion_minor",
+        "name": "Minor Health Potion",
+        "output_item": "item_health_potion_minor",
+        "output_quantity": 1,
+        "resources_required": [
+          { "item_id": "item_herb_vitality", "quantity": 2 },
+          { "item_id": "item_water_pure", "quantity": 1 }
+        ],
+        "time_required_seconds": 120,
+        "skill_required": "alchemy_basic",
+        "station_required": "alchemy_cauldron"
+      },
+      {
+        "id": "recipe_iron_ingot",
+        "name": "Smelt Iron Ore",
+        "output_item": "item_iron_ingot",
+        "output_quantity": 1,
+        "resources_required": [
+          { "item_id": "item_iron_ore", "quantity": 1 },
+          { "item_id": "item_coal", "quantity": 2 }
+        ],
+        "time_required_seconds": 180,
+        "skill_required": "smithing_basic",
+        "station_required": "furnace_basic"
+      }
+    ],
+    "resource_spawn_rates": {
+      "item_wood_log": 0.8,
+      "item_iron_ore": 0.3,
+      "item_herb_vitality": 0.5,
+      "item_coal": 0.4
+    },
+    "tax_rates": {
+      "npc_village_merchant": 0.05,
+      "auction_house": 0.10
+    },
+    "inflation_control": {
+      "base_inflation_rate": 0.001,
+      "supply_buffer_threshold": 10000,
+      "demand_boost_multiplier": 1.5,
+      "item_price_stabilization": {
+        "enabled": true,
+        "buffer_percentage": 0.10,
+        "adjustment_frequency_hours": 1
+      }
+    },
+    "trade_routes": [
+      {
+        "id": "route_forest_to_desert",
+        "name": "Caravan Route: Forest to Desert",
+        "start_location": "region_forest_a",
+        "end_location": "region_desert_b",
+        "goods_traded": [
+          { "item_id": "item_wood_log", "supply": 100, "demand": 20 },
+          { "item_id": "item_sandstone", "supply": 80, "demand": 30 }
+        ],
+        "travel_time_hours": 8,
+        "risk_factor": 0.1
+      }
+    ],
+    "global_economy_settings": {
+      "enable_player_trading": true,
+      "enable_guild_economy_features": true,
+      "enable_auction_house": true,
+      "max_currency_storage_multiplier": 5.0
+    }
+  }
+}

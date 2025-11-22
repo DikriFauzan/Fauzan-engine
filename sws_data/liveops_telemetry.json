@@ -1,0 +1,39 @@
+[
+  {
+    "timestamp": 1732012500,
+    "type": "session_start",
+    "player_id": "default_player",
+    "session_id": "sess_abc123",
+    "location": "region_forest_a"
+  },
+  {
+    "timestamp": 1732012550,
+    "type": "player_action",
+    "player_id": "default_player",
+    "action": "interact_npc",
+    "target_npc": "npc_guide_elara"
+  },
+  {
+    "timestamp": 1732012600,
+    "type": "quest_started",
+    "player_id": "default_player",
+    "quest_id": "quest_find_crystal_01"
+  },
+  {
+    "timestamp": 1732012650,
+    "type": "item_used",
+    "player_id": "default_player",
+    "item_name": "Health Potion",
+    "quantity": 1,
+    "current_hp": 70,
+    "max_hp": 100
+  },
+  {
+    "timestamp": 1732012700,
+    "type": "session_end",
+    "player_id": "default_player",
+    "session_id": "sess_abc123",
+    "duration_seconds": 200,
+    "location": "region_forest_a"
+  }
+]

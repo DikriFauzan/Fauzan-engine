@@ -1,0 +1,89 @@
+{
+  "id": "world_manifest_example_1",
+  "name": "Eldoria Prime",
+  "description": "A vast fantasy world with diverse biomes and ancient mysteries.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1704067200,
+  "metadata": {
+    "genre": "Fantasy",
+    "scale": "MMORPG",
+    "target_audience": "All Ages",
+    "estimated_playtime_hours": 200
+  },
+  "world": {
+    "name": "Eldoria Prime",
+    "regions": [
+      {
+        "id": "region_forest_a",
+        "name": "Whispering Woods",
+        "description": "A dense, magical forest inhabited by wood spirits and ancient creatures.",
+        "biome": "temperate_forest",
+        "coordinates": { "x": 0, "y": 0, "z": 0 },
+        "size": { "width": 1000, "height": 1000, "depth": 100 },
+        "weather": { "default": "sunny", "chance_rain": 0.3, "chance_storm": 0.05 },
+        "resources": [
+          { "name": "Magical Wood", "spawn_rate": 0.8, "min_level": 1 },
+          { "name": "Herb of Vitality", "spawn_rate": 0.5, "min_level": 5 }
+        ],
+        "spawn_points": [
+          { "type": "monster", "name": "Forest Sprite", "frequency": 0.7, "level_range": [1, 5] },
+          { "type": "monster", "name": "Ancient Treant", "frequency": 0.05, "level_range": [10, 15] }
+        ]
+      },
+      {
+        "id": "region_desert_b",
+        "name": "Scorched Dunes",
+        "description": "A harsh desert with ancient ruins and dangerous sandstorms.",
+        "biome": "desert",
+        "coordinates": { "x": 1500, "y": 0, "z": 0 },
+        "size": { "width": 800, "height": 800, "depth": 100 },
+        "weather": { "default": "sunny", "chance_rain": 0.01, "chance_sandstorm": 0.1 },
+        "resources": [
+          { "name": "Sandstone", "spawn_rate": 0.9, "min_level": 1 },
+          { "name": "Desert Rose", "spawn_rate": 0.2, "min_level": 10 }
+        ],
+        "spawn_points": [
+          { "type": "monster", "name": "Sandworm", "frequency": 0.1, "level_range": [15, 25] },
+          { "type": "monster", "name": "Desert Bandit", "frequency": 0.5, "level_range": [5, 12] }
+        ]
+      }
+    ],
+    "biomes": [
+      {
+        "id": "temperate_forest",
+        "name": "Temperate Forest",
+        "base_temperature": 15,
+        "base_humidity": 0.7,
+        "allowed_monsters": ["Forest Sprite", "Ancient Treant"],
+        "allowed_resources": ["Magical Wood", "Herb of Vitality"]
+      },
+      {
+        "id": "desert",
+        "name": "Desert",
+        "base_temperature": 40,
+        "base_humidity": 0.1,
+        "allowed_monsters": ["Sandworm", "Desert Bandit"],
+        "allowed_resources": ["Sandstone", "Desert Rose"]
+      }
+    ],
+    "factions": [
+      {
+        "id": "faction_wood_elves",
+        "name": "Guardians of the Grove",
+        "description": "A faction of wood elves dedicated to protecting the Whispering Woods.",
+        "relations": { "faction_desert_nomads": -0.5, "faction_neutral_beasts": 0.8 }
+      },
+      {
+        "id": "faction_desert_nomads",
+        "name": "Sons of the Scorching Sun",
+        "description": "Nomadic people thriving in the Scorched Dunes.",
+        "relations": { "faction_wood_elves": -0.5, "faction_neutral_beasts": 0.2 }
+      }
+    ],
+    "global_modifiers": {
+      "magic_resistance_multiplier": 1.1,
+      "travel_speed_multiplier": 1.0
+    }
+  }
+}

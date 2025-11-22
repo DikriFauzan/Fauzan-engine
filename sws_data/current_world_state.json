@@ -1,0 +1,79 @@
+{
+  "timestamp": 1732012800,
+  "last_updated_by": "NeoEngineOrchestrator",
+  "world": {
+    "name": "Eldoria Prime",
+    "current_time": 45000, // Detik dari awal hari game
+    "weather": "sunny"
+  },
+  "regions": {
+    "region_forest_a": {
+      "name": "Whispering Woods",
+      "status": "active",
+      "dynamic_modifiers": {}
+    },
+    "region_desert_b": {
+      "name": "Scorched Dunes",
+      "status": "active",
+      "dynamic_modifiers": {}
+    }
+  },
+  "player_data_default_player": {
+    "player_id": "default_player",
+    "level": 5,
+    "xp": 450,
+    "xp_to_next_level": 600,
+    "status": {
+      "health": 90,
+      "max_health": 100,
+      "mana": 45,
+      "max_mana": 50
+    },
+    "inventory": {
+      "items": [
+        { "name": "Health Potion", "quantity": 3 },
+        { "name": "Iron Ore", "quantity": 10 }
+      ],
+      "gold": 150,
+      "capacity": 50
+    },
+    "quests": {
+      "active": ["quest_find_crystal_01"],
+      "completed": ["quest_tutorial_01"]
+    },
+    "location": "region_forest_a"
+  },
+  "last_scene_plan": {
+    "id": "scene_plan_1732012800",
+    "world": {
+      "name": "Eldoria Prime",
+      "regions": []
+    },
+    "characters": [],
+    "npc_ai": {},
+    "quests": [],
+    "classes": [],
+    "skills": [],
+    "combat": {},
+    "economy": {},
+    "cinematics": {},
+    "physics": {},
+    "engine_evolution": {
+      "recommended_modules": [],
+      "new_agents": [],
+      "importer_extensions": [],
+      "engine_v2_capabilities": []
+    }
+  },
+  "economy": {
+    "market_prices": {
+      "item_health_potion": { "buy_price": 10, "sell_price": 5 },
+      "item_wood_log": { "buy_price": 2, "sell_price": 1 }
+    }
+  },
+  "telemetry_events": [], // Ini mungkin diisi oleh GameMonitor dan disimpan sementara
+  "entities": [], // Contoh struktur entitas jika digunakan
+  "engine_config": {
+    "version": "NeoEngine v1"
+  }
+}

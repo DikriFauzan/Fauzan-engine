@@ -1,0 +1,116 @@
+{
+  "id": "cinematic_manifest_example_1",
+  "name": "Intro Cinematics",
+  "description": "Set of cinematic sequences for the game's introduction and key story beats.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1704067200,
+  "cinematics": [
+    {
+      "id": "cinematic_intro_01",
+      "name": "The Awakening",
+      "description": "Player's character wakes up in a mysterious place.",
+      "duration_seconds": 60,
+      "type": "story_beat",
+      "trigger_event": "player_first_spawn",
+      "scenes": [
+        {
+          "id": "scene_01_a",
+          "name": "Mysterious Fog",
+          "description": "Character opens eyes in a foggy, ethereal environment.",
+          "camera": {
+            "type": "static",
+            "position": { "x": 0, "y": 5, "z": -10 },
+            "rotation": { "x": 15, "y": 0, "z": 0 },
+            "fov": 60
+          },
+          "actors": [
+            {
+              "id": "player_character",
+              "action": "wakes_up",
+              "animation": "waking_up_idle"
+            }
+          ],
+          "audio": {
+            "music": "mysterious_ambient_loop.ogg",
+            "voiceover": "intro_vo_01.wav"
+          },
+          "visual_effects": [
+            {
+              "type": "particle_system",
+              "resource_path": "res://assets/vfx/fog_particle.tscn",
+              "position": { "x": 0, "y": 0, "z": 0 }
+            }
+          ],
+          "duration": 20
+        },
+        {
+          "id": "scene_01_b",
+          "name": "Looking Around",
+          "description": "Character looks around, confused and disoriented.",
+          "camera": {
+            "type": "follow",
+            "target": "player_character",
+            "offset": { "x": 0, "y": 2, "z": -3 },
+            "smoothness": 0.1
+          },
+          "actors": [
+            {
+              "id": "player_character",
+              "action": "look_around_confused",
+              "animation": "look_around_idle"
+            }
+          ],
+          "duration": 40
+        }
+      ]
+    },
+    {
+      "id": "cinematic_boss_defeat_01",
+      "name": "Victory Fanfare",
+      "description": "Plays after defeating a major boss.",
+      "duration_seconds": 30,
+      "type": "victory",
+      "trigger_event": "boss_defeated_great_drake",
+      "scenes": [
+        {
+          "id": "scene_victory_a",
+          "name": "Boss Falls",
+          "description": "The great drake crashes to the ground.",
+          "camera": {
+            "type": "dynamic",
+            "preset": "epic_boss_fall"
+          },
+          "actors": [
+            {
+              "id": "great_drake_boss",
+              "action": "fall_defeated",
+              "animation": "death_fall"
+            }
+          ],
+          "audio": {
+            "music": "victory_fanfare_loop.ogg"
+          },
+          "duration": 15
+        },
+        {
+          "id": "scene_victory_b",
+          "name": "Player Celebration",
+          "description": "Player character celebrates victory.",
+          "camera": {
+            "type": "close_up",
+            "target": "player_character"
+          },
+          "actors": [
+            {
+              "id": "player_character",
+              "action": "celebrate_victory",
+              "animation": "victory_cheer"
+            }
+          ],
+          "duration": 15
+        }
+      ]
+    }
+  ]
+}

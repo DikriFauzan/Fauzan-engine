@@ -1,0 +1,30 @@
+{
+  "id": "whatsapp_webhook_config_example_1",
+  "name": "WhatsApp Business API Webhook Config",
+  "description": "Configuration for receiving and parsing messages from WhatsApp Business API.",
+  "version": "1.0.0",
+  "author": "NeoEngine v1",
+  "timestamp": 1732012800,
+  "webhook_config": {
+    "endpoint": "/webhook/whatsapp", // Path where Meta API will send POST requests
+    "verify_token": "your_verify_token_here", // Token for initial webhook verification
+    "admin_phone_numbers": [ // List of authorized admin numbers
+      "+1234567890",
+      "+0987654321"
+    ],
+    "message_processing": {
+      "enabled": true,
+      "command_prefix": "/", // Commands start with /
+      "default_response": "Command not recognized. Use /help for list.",
+      "max_message_length": 4096 // Max length of message to process
+    },
+    "security": {
+      "validate_signature": true, // Validate X-Hub-Signature-256 header
+      "signature_secret": "your_webhook_secret_here" // Secret used for signature calculation
+    },
+    "integration": {
+      "target_agent": "CommandAgent", // Which internal agent to forward parsed commands to
+      "event_on_receive": "whatsapp_message_received" // Event to emit internally
+    }
+  }
+}
