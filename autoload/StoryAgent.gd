@@ -133,17 +133,15 @@ func _save_plan_to_sws(plan: Dictionary) -> void:
         printerr("StoryAgent: SharedWorldState not available.")
 
 func _fallback_persist_local(blueprint: Dictionary) -> void:
-    # FIX 6: Menggunakan metode statis Godot 4 yang paling aman untuk membuat folder
-    # Ini adalah satu-satunya cara yang harus bekerja untuk membuat folder user://
+    # FIX 7: Mengganti ERR_FILE_EXISTS dengan Error.ERR_FILE_EXISTS untuk mengatasi masalah scoping/deklarasi
     var error_code = DirAccess.make_dir_recursive_absolute(LOCAL_PLAN_DIR)
     
-    if error_code != OK and error_code != ERR_FILE_EXISTS:
+    if error_code != OK and error_code != Error.ERR_FILE_EXISTS:
         printerr("StoryAgent: Gagal membuat direktori lokal: %s (Error: %d)" % [LOCAL_PLAN_DIR, error_code])
         return
 
     var fname: String = LOCAL_PLAN_DIR + (blueprint.get("script_id", blueprint.get("id", "scene_unknown")) + ".json")
     
-    # Godot 4: Menggunakan FileAccess.open dengan parameter kedua sebagai mode
     var f: FileAccess = FileAccess.open(fname, FileAccess.WRITE) 
     
     if f:
