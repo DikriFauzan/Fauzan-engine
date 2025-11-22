@@ -46,12 +46,11 @@ func generate_story_plan(prompt: String) -> void:
     
     print("StoryAgent: Menerima prompt: '%s'. Memulai generasi plan..." % prompt)
     
-    # Karena NeoEngineBridge (Agen API LLM) belum dibuat, kita akan langsung menggunakan fallback lokal.
-    # Di masa depan, kode ini akan diganti dengan: if bridge_node: return _request_llm_generation(prompt)
-    
+    # Memanggil plan lokal (fallback)
     var blueprint: Dictionary = _generate_local_plan(prompt)
     
     if orchestrator.has_method("execute_plan"):
+        # Setelah StoryAgent membuat plan, ia menyuruh Orchestrator untuk melaksanakannya.
         orchestrator.execute_plan(blueprint)
     
     generation_in_progress = false
@@ -60,14 +59,11 @@ func generate_story_plan(prompt: String) -> void:
 # --- LLM Integration (Future Use) ---
 
 func _request_llm_generation(prompt: String) -> void:
-    # FIX 1: Menambahkan underscore di depan agar Godot tidak mengeluarkan warning UNUSED_VARIABLE
     var _constructed_prompt = _construct_llm_prompt(prompt) 
-    # WARNING: Baris ini akan error sampai Anda membuat NeoEngineBridge dengan fungsi yang sesuai.
     # bridge_node.request_llm_generation(_constructed_prompt, self, "_on_llm_response_received", "_on_llm_response_received_error")
     
     if sws:
         sws.set_data("story_generation_status", "in_progress")
-    # return {"status": "llm_request_sent", "prompt": prompt} # Tidak mengembalikan Dictionary karena ini adalah metode async
 
 func _on_llm_response_received(response_json_string: String) -> void:
     var parsed_response = JSON.parse_string(response_json_string)
@@ -143,18 +139,22 @@ func _save_plan_to_sws(plan: Dictionary) -> void:
         printerr("StoryAgent: SharedWorldState not available.")
 
 func _fallback_persist_local(blueprint: Dictionary) -> void:
-    # FIX 2: Mengubah DirAccess.make_dir_recursive() menjadi statis (Godot 4)
-    DirAccess.make_dir_recursive(LOCAL_PLAN_DIR) 
+    # FIX 4: Membuat instance DirAccess untuk menggunakan fungsi non-statis
+    var dir_access: DirAccess = DirAccess.create_for_path(LOCAL_PLAN_DIR)
+    if dir_access == null:
+        printerr("StoryAgent: Gagal membuat DirAccess untuk: %s" % LOCAL_PLAN_DIR)
+        return
+        
+    if dir_access.make_dir_recursive(LOCAL_PLAN_DIR) != OK:
+        printerr("StoryAgent: Gagal membuat direktori lokal secara rekursif: %s" % LOCAL_PLAN_DIR)
+        return
 
     var fname: String = LOCAL_PLAN_DIR + (blueprint.get("script_id", blueprint.get("id", "scene_unknown")) + ".json")
     
-    # Godot 4: Menggunakan FileAccess.open dengan parameter kedua sebagai mode
     var f: FileAccess = FileAccess.open(fname, FileAccess.WRITE) 
     
     if f:
-        # Menggunakan JSON.stringify dengan indentasi untuk readability
         f.store_string(JSON.stringify(blueprint, "\t")) 
         print("StoryAgent: fallback saved plan to ", fname)
     else:
-        # Menambahkan pesan error spesifik jika gagal
         printerr("StoryAgent: failed to write fallback plan to %s (Error: %d)" % [fname, FileAccess.get_open_error()])
