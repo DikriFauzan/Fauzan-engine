@@ -2,7 +2,6 @@ extends Node
 
 ## CommandAgent - NeoEngine v1
 ## Bertanggung jawab untuk menerima perintah eksternal (simulasi dari Termux Webhook)
-## dan mengarahkan perintah tersebut ke Agent yang relevan.
 
 # --- Dependensi (Autoload) ---
 var sws: Node = null 
@@ -16,6 +15,8 @@ const COMMAND_CHECK_INTERVAL := 5.0
 # --- State Internal ---
 var is_server_reachable: bool = false
 var last_check_time: float = 0.0
+# PERBAIKAN: Variabel untuk melacak jenis permintaan terakhir
+var last_request_type: int = HTTPClient.METHOD_GET
 
 func _ready() -> void:
 	# Inisialisasi dependensi
@@ -33,13 +34,11 @@ func _ready() -> void:
 	# Inisialisasi node HTTPRequest
 	http_request = HTTPRequest.new()
 	add_child(http_request)
-	# Godot 4 menggunakan Callable untuk sinyal
 	http_request.request_completed.connect(_on_http_request_completed)
 	
 	print("CommandAgent: Siap. Server Termux di: %s" % TERMUX_WEBHOOK_URL)
 	_check_server_status()
 
-# PERBAIKAN: Parameter _delta diberi underscore
 func _process(_delta: float) -> void: 
 	if Time.get_unix_time_from_system() - last_check_time > COMMAND_CHECK_INTERVAL:
 		_check_server_status()
@@ -53,30 +52,33 @@ func _check_server_status() -> void:
 	if not is_instance_valid(http_request):
 		return
 		
-	# Pastikan http_request tidak sedang aktif sebelum mengirim request baru
 	if http_request.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
 		return
+	
+	# SET STATUS REQUEST SEBELUM MENGIRIM
+	last_request_type = HTTPClient.METHOD_GET 
 
 	var error = http_request.request(TERMUX_WEBHOOK_URL, ["Content-Type: application/json"], HTTPClient.METHOD_GET)
 	if error != OK:
 		printerr("CommandAgent: Gagal mengirim permintaan status HTTP (Error: ", error, ").")
 		is_server_reachable = false
-		if sws.has_method("set_data"):
+		if sws and sws.has_method("set_data"): # Pastikan SWS sudah diinisialisasi
 			sws.set_data("external_server_status", "DOWN")
 		
-# PERBAIKAN: Parameter _headers diberi underscore
 func _on_http_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void: 
 	
 	if result == HTTPRequest.RESULT_SUCCESS:
 		if response_code == 200:
 			if not is_server_reachable:
 				print("CommandAgent: Server Termux Webhook AKTIF (Code: %d)." % response_code)
-				if sws.has_method("set_data"):
+				if sws and sws.has_method("set_data"): # Pastikan SWS sudah diinisialisasi
 					sws.set_data("external_server_status", "UP")
 				is_server_reachable = true
 			
-			if http_request.get_last_method() == HTTPClient.METHOD_GET:
-				return
+			# PERBAIKAN: Menggunakan variabel yang kita set sendiri
+			if last_request_type == HTTPClient.METHOD_GET:
+				# Jika ini hanya cek status, tidak perlu memproses body
+				return 
 
 			var response_text = body.get_string_from_utf8()
 			_process_incoming_command(response_text)
@@ -87,6 +89,8 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 	else:
 		printerr("CommandAgent: Koneksi ke server Termux GAGAL (Result: %d). Pastikan server Termux berjalan." % result)
 		is_server_reachable = false
+		if sws and sws.has_method("set_data"):
+			sws.set_data("external_server_status", "DOWN")
 
 # --- Logika Pemrosesan Perintah ---
 
