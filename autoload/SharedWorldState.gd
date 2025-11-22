@@ -31,8 +31,12 @@ var entity_data: Dictionary = {
 func _ready() -> void:
 	print("SharedWorldState: Database global berhasil diinisialisasi.")
 	
-	for node in get_tree().get_children():
-		if node is Node and node.get_name().ends_with("Agent"):
+	# PERBAIKAN DI BAWAH INI (Baris 34)
+	# Mendaftarkan Agent yang saat ini berjalan (mengambil children dari root node)
+	var root_node = get_tree().get_root()
+	for node in root_node.get_children():
+		# Kita hanya ingin node yang merupakan Agent, dan bukan Autoload dasar
+		if node is Node and node.get_name().ends_with("Agent") and not node.get_name() == "CommandAgent":
 			world_data.agents_running.append(node.get_name())
 	
 	print("SharedWorldState: Agent Aktif: %s" % world_data.agents_running)
