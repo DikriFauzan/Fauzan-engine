@@ -14,6 +14,7 @@ var generation_in_progress: bool = false
 var last_prompt: String = ""
 
 # --- Konfigurasi File Lokal ---
+# Menggunakan path "user://" yang dianggap absolut oleh Godot
 const LOCAL_PLAN_DIR: String = "user://generated/scene_plans/"
 
 func _ready() -> void:
@@ -139,22 +140,22 @@ func _save_plan_to_sws(plan: Dictionary) -> void:
         printerr("StoryAgent: SharedWorldState not available.")
 
 func _fallback_persist_local(blueprint: Dictionary) -> void:
-    # FIX 4: Membuat instance DirAccess untuk menggunakan fungsi non-statis
-    var dir_access: DirAccess = DirAccess.create_for_path(LOCAL_PLAN_DIR)
-    if dir_access == null:
-        printerr("StoryAgent: Gagal membuat DirAccess untuk: %s" % LOCAL_PLAN_DIR)
-        return
-        
-    if dir_access.make_dir_recursive(LOCAL_PLAN_DIR) != OK:
-        printerr("StoryAgent: Gagal membuat direktori lokal secara rekursif: %s" % LOCAL_PLAN_DIR)
+    # FIX 5: Menggunakan metode statis Godot 4 yang paling aman untuk membuat folder
+    # Karena LOCAL_PLAN_DIR menggunakan "user://", kita bisa menggunakan make_dir_recursive_absolute.
+    var error_code = DirAccess.make_dir_recursive_absolute(LOCAL_PLAN_DIR)
+    
+    if error_code != OK and error_code != ERR_FILE_EXISTS:
+        printerr("StoryAgent: Gagal membuat direktori lokal: %s (Error: %d)" % [LOCAL_PLAN_DIR, error_code])
         return
 
     var fname: String = LOCAL_PLAN_DIR + (blueprint.get("script_id", blueprint.get("id", "scene_unknown")) + ".json")
     
+    # Godot 4: Menggunakan FileAccess.open dengan parameter kedua sebagai mode
     var f: FileAccess = FileAccess.open(fname, FileAccess.WRITE) 
     
     if f:
         f.store_string(JSON.stringify(blueprint, "\t")) 
         print("StoryAgent: fallback saved plan to ", fname)
     else:
+        # Menambahkan pesan error spesifik jika gagal
         printerr("StoryAgent: failed to write fallback plan to %s (Error: %d)" % [fname, FileAccess.get_open_error()])
