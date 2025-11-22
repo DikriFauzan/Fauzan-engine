@@ -60,9 +60,10 @@ func generate_story_plan(prompt: String) -> void:
 # --- LLM Integration (Future Use) ---
 
 func _request_llm_generation(prompt: String) -> void:
-    var constructed_prompt = _construct_llm_prompt(prompt)
+    # FIX 1: Menambahkan underscore di depan agar Godot tidak mengeluarkan warning UNUSED_VARIABLE
+    var _constructed_prompt = _construct_llm_prompt(prompt) 
     # WARNING: Baris ini akan error sampai Anda membuat NeoEngineBridge dengan fungsi yang sesuai.
-    # bridge_node.request_llm_generation(constructed_prompt, self, "_on_llm_response_received", "_on_llm_response_received_error")
+    # bridge_node.request_llm_generation(_constructed_prompt, self, "_on_llm_response_received", "_on_llm_response_received_error")
     
     if sws:
         sws.set_data("story_generation_status", "in_progress")
@@ -142,7 +143,8 @@ func _save_plan_to_sws(plan: Dictionary) -> void:
         printerr("StoryAgent: SharedWorldState not available.")
 
 func _fallback_persist_local(blueprint: Dictionary) -> void:
-    DirAccess.make_dir_recursive(LOCAL_PLAN_DIR) # Menggunakan DirAccess modern
+    # FIX 2: Mengubah DirAccess.make_dir_recursive() menjadi statis (Godot 4)
+    DirAccess.make_dir_recursive(LOCAL_PLAN_DIR) 
 
     var fname: String = LOCAL_PLAN_DIR + (blueprint.get("script_id", blueprint.get("id", "scene_unknown")) + ".json")
     
