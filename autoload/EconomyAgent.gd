@@ -20,10 +20,8 @@ const DEFAULT_GLOBAL_ECONOMY: Dictionary = {
 	},
 	# Default set data market untuk game universal (dapat ditimpa oleh StoryPlan)
 	"market_seeds": {
-		# Komoditas Game (Contoh: World Building, Farmville, dsb.)
 		"Wheat": {"base_price": 10.0, "supply": 1000, "demand": 800},
 		"AyamPedaging": {"base_price": 30000.0, "supply": 500, "demand": 900},
-		# Unit/Skor Game (Contoh: Chess, Tower Defense, dsb.)
 		"Tower_Base_Cost": {"base_price": 100.0, "supply": 9999, "demand": 50},
 		"Chess_Rating_Value": {"base_price": 1.0, "supply": 1000, "demand": 1000}
 	},
@@ -39,6 +37,11 @@ func _ready() -> void:
 		push_error("EconomyAgent: SharedWorldState not found! Cannot operate.")
 		return
 		
+	# 🚨 PERBAIKAN KRITIS: Jika SWS belum memiliki data pasar, inisialisasi default.
+	# Ini mencegah error loop 'current_market_prices' di _process().
+	if sws and sws.get_data("current_market_prices") == null:
+		execute_plan({}) # Memicu inisialisasi menggunakan default
+		
 	print("EconomyAgent: Siap (Mode Simulasi Dinamis). Menunggu Plan Ekonomi dari Orchestrator.")
 	
 # --- Panggilan Orchestrator (Memuat Plan) ---
@@ -52,7 +55,6 @@ func execute_plan(plan_data: Dictionary) -> void:
 	
 	print("EconomyAgent: Menerima Plan Ekonomi. Memuat dan memproses simulasi nilai...")
 	
-	# Gabungkan Plan dengan Default Global
 	var final_economy_data = DEFAULT_GLOBAL_ECONOMY.duplicate(true)
 	final_economy_data.merge(economy_data, true) 
 
@@ -66,11 +68,10 @@ func _initialize_economy(data: Dictionary) -> void:
 	
 	# 2. Atur Skema Monetisasi Global (dari dokumen Anda)
 	sws.set_data("monetization_bundles", data.get("monetization_bundles"))
-	sws.set_data("land_schema", data.get("land_investment_schema")) # Khusus FarmVille
+	sws.set_data("land_schema", data.get("land_investment_schema")) 
 
 	# 3. Set Market Data Awal dan Inflasi
 	global_inflation = 0.0
-	# Simpan market seed (data awal) ke SWS
 	sws.set_data("market_seeds", data.get("market_seeds"))
 	sws.set_data("inflation_rate", data.get("inflation_rate"))
 
@@ -81,15 +82,17 @@ func _initialize_economy(data: Dictionary) -> void:
 
 # --- Simulasi Waktu Nyata ---
 func _process(delta: float) -> void:
-	# Hanya update jika game sedang berjalan, bukan di editor.
 	if Engine.is_editor_hint():
 		return
 		
 	update_economy_simulation(delta)
 
 func update_economy_simulation(delta: float) -> void:
+	# 🚨 PENGAMAN: Jika SWS belum terinisialisasi, jangan lakukan apa-apa di _process
+	if sws.get_data("current_market_prices") == null:
+		return
+		
 	# 1. Update Global Inflation
-	# KOREKSI PENTING: Panggilan get_data sekarang hanya 1 argumen
 	var inflation_rate_data = sws.get_data("inflation_rate") 
 	var inflation_rate = inflation_rate_data if inflation_rate_data != null else DEFAULT_GLOBAL_ECONOMY.get("inflation_rate")
 
@@ -100,15 +103,16 @@ func update_economy_simulation(delta: float) -> void:
 	
 # --- Fungsi Perhitungan Harga Dinamis ---
 func refresh_market_data() -> void:
-	# KOREKSI PENTING: Panggilan get_data sekarang hanya 1 argumen
 	var seeds = sws.get_data("market_seeds") 
 	if seeds == null:
 		seeds = DEFAULT_GLOBAL_ECONOMY.get("market_seeds")
 
-	# Reset market data saat ini
+	# Pastikan seeds adalah Dictionary agar perulangan tidak crash
+	if not seeds is Dictionary:
+		return
+		
 	current_market_data.clear()
 	
-	# Hitung harga dinamis untuk setiap item
 	for item_id in seeds:
 		var data = seeds[item_id]
 		var base_price = data.get("base_price", 0.0)
@@ -121,14 +125,12 @@ func refresh_market_data() -> void:
 		# Harga Akhir = Base * (Ratio S/D) * (1 + Inflasi)
 		var final_price = base_price * ratio * (1.0 + global_inflation)
 		
-		# Simpan hasil perhitungan (harga dinamis) ke market data
 		current_market_data[item_id] = {
 			"price": final_price,
 			"supply": supply,
 			"demand": demand
 		}
 	
-	# Simpan harga dinamis yang sudah dihitung ke SWS untuk Agen lain
 	sws.set_data("current_market_prices", current_market_data)
 
 
@@ -140,9 +142,5 @@ func get_simulated_price(item_id: String) -> float:
 	printerr("EconomyAgent: Harga simulasi untuk item '%s' tidak ditemukan." % item_id)
 	return 0.0
 
-# Fungsi Contoh: Menambah saldo (dipanggil oleh agen Player/Trade)
 func add_currency(currency_type: String, amount: float) -> void:
-	# Implementasi ini membutuhkan PlayerAgent/TradeAgent untuk memegang saldo
-	# Namun, Agen Ekonomi Universal ini bertanggung jawab untuk logikanya.
 	print("EconomyAgent: Memicu transaksi: +%.2f %s" % [amount, currency_type])
-	# Placeholder: Akan memanggil fungsi di PlayerAgent/TradeAgent
