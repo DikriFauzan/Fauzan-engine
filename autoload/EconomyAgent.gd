@@ -89,19 +89,22 @@ func _process(delta: float) -> void:
 
 func update_economy_simulation(delta: float) -> void:
 	# 1. Update Global Inflation
-	var inflation_rate = sws.get_data("inflation_rate", DEFAULT_GLOBAL_ECONOMY.get("inflation_rate"))
+	# KOREKSI PENTING: Panggilan get_data sekarang hanya 1 argumen
+	var inflation_rate_data = sws.get_data("inflation_rate") 
+	var inflation_rate = inflation_rate_data if inflation_rate_data != null else DEFAULT_GLOBAL_ECONOMY.get("inflation_rate")
+
 	global_inflation += inflation_rate * delta
 	
 	# 2. Simulasikan Fluktuasi Pasar
-	# Dalam game, Supply/Demand akan dipengaruhi oleh aktivitas pemain (TradeAgent)
-	# Untuk sementara, hanya me-refresh harga berdasarkan inflasi.
 	refresh_market_data()
 	
 # --- Fungsi Perhitungan Harga Dinamis ---
 func refresh_market_data() -> void:
-	# Ambil seed (data base price) dari SWS
-	var seeds = sws.get_data("market_seeds", DEFAULT_GLOBAL_ECONOMY.get("market_seeds"))
-	
+	# KOREKSI PENTING: Panggilan get_data sekarang hanya 1 argumen
+	var seeds = sws.get_data("market_seeds") 
+	if seeds == null:
+		seeds = DEFAULT_GLOBAL_ECONOMY.get("market_seeds")
+
 	# Reset market data saat ini
 	current_market_data.clear()
 	
