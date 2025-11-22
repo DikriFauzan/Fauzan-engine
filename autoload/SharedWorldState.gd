@@ -1,113 +1,71 @@
 extends Node
-# Shared World State - single source of truth for NeoEngine
-# Author: Generated for Fauzan-engine
-# License: MIT
 
-signal state_changed(key: String, value)
-signal batch_updated(changes: Dictionary)
+## SharedWorldState (SWS) - NeoEngine v1
+## Menyimpan semua data global, state game, dan informasi yang dibagikan antar Agent.
+## Bertindak sebagai database In-Memory untuk simulasi.
 
-const AUTOSAVE_PATH := "user://sws_current_world_state.json"
-const AUTOSAVE_INTERVAL := 10.0 # seconds
+# --- Data Dunia ---
+var world_data: Dictionary = {
+	"time_day": 1, 			
+	"time_cycle": "morning", 	
+	"population": 1000, 		
+	"economy_index": 5.0, 		
+	"event_history": [], 		
+	"external_server_status": "DOWN", 
+	"agents_running": [],		
+}
 
-var sws : Dictionary = {}
-var _autosave_timer : Timer
+# --- Data Entitas (Contoh Placeholder) ---
+var entity_data: Dictionary = {
+	"player_character": {
+		"health": 100,
+		"location": "Central Hub",
+		"inventory": {},
+	},
+	"items": {
+		"gold_price": 100,
+		"food_price": 5,
+	}
+}
 
 func _ready() -> void:
-    # initialize
-    _load_from_file(AUTOSAVE_PATH)
-    _autosave_timer = Timer.new()
-    _autosave_timer.wait_time = AUTOSAVE_INTERVAL
-    _autosave_timer.one_shot = false
-    _autosave_timer.autostart = true
-    add_child(_autosave_timer)
-    _autosave_timer.connect("timeout", Callable(self, "_on_autosave_timeout"))
-    print("SharedWorldState: Ready. Data loaded.")
+	print("SharedWorldState: Database global berhasil diinisialisasi.")
+	
+	for node in get_tree().get_children():
+		if node is Node and node.get_name().ends_with("Agent"):
+			world_data.agents_running.append(node.get_name())
+	
+	print("SharedWorldState: Agent Aktif: %s" % world_data.agents_running)
 
-# Basic getters/setters
-
-func get_data(key: String, default: Variant = null) -> Variant:
-    if key == "":
-        return sws
-    if sws.has(key):
-        return sws[key]
-    return default
+func get_data(key: String) -> Variant:
+	if world_data.has(key):
+		return world_data[key]
+	else:
+		return null
 
 func set_data(key: String, value: Variant) -> void:
-    sws[key] = value
-    emit_signal("state_changed", key, value)
+	if world_data.has(key):
+		world_data[key] = value
+		print("SWS Update: %s diubah menjadi %s" % [key, value])
+	else:
+		printerr("SWS Error: Kunci '%s' tidak ditemukan di database global." % key)
 
-func remove_data(key: String) -> void:
-    if sws.has(key):
-        sws.erase(key)
-        emit_signal("state_changed", key, null)
+func get_entity_data(entity_key: String, data_key: String) -> Variant:
+	if entity_data.has(entity_key) and entity_data[entity_key].has(data_key):
+		return entity_data[entity_key][data_key]
+	return null
 
-# Update multiple keys atomically
-func update_data_batch(updates: Dictionary) -> void:
-    for k in updates.keys():
-        sws[k] = updates[k]
-    emit_signal("batch_updated", updates)
+func set_entity_data(entity_key: String, data_key: String, value: Variant) -> void:
+	if entity_data.has(entity_key) and entity_data[entity_key].has(data_key):
+		entity_data[entity_key][data_key] = value
+		print("SWS Entity Update: %s.%s diubah menjadi %s" % [entity_key, data_key, value])
+	else:
+		printerr("SWS Entity Error: Kunci entitas atau data tidak ditemukan.")
 
-# Merge (patch) nested dictionaries (shallow merge)
-func patch_data(key: String, patch: Dictionary) -> void:
-    var current = {}
-    if sws.has(key) and sws[key] is Dictionary:
-        current = sws[key]
-    for p_key in patch.keys():
-        current[p_key] = patch[p_key]
-    sws[key] = current
-    emit_signal("state_changed", key, sws[key])
-
-# Persistence: save/load
-
-func save_to_file(path: String = AUTOSAVE_PATH) -> bool:
-    var j = JSON.stringify(sws)
-    var file = FileAccess.open(path, FileAccess.WRITE)
-    if file:
-        file.store_string(j)
-        file.close()
-        return true
-    return false
-
-func _load_from_file(path: String) -> bool:
-    if not FileAccess.file_exists(path):
-        sws = {}
-        return false
-    var file = FileAccess.open(path, FileAccess.READ)
-    if not file:
-        sws = {}
-        return false
-    var txt := file.get_as_text()
-    file.close()
-    var parsed = JSON.parse_string(txt)
-    if typeof(parsed) == TYPE_DICTIONARY:
-        sws = parsed.duplicate(true)
-        return true
-    sws = {}
-    return false
-
-func load_from_file(path: String) -> bool:
-    return _load_from_file(path)
-
-# Autosave handler
-func _on_autosave_timeout() -> void:
-    save_to_file(AUTOSAVE_PATH)
-
-# Utility helpers
-func dump_pretty() -> String:
-    # Gunakan JSON.stringify untuk membuat string JSON yang rapi
-    var json_string = JSON.stringify(sws, "\t") # <-- Baris 97 sekarang (kemungkinan besar)
-    # print(json_string) # <-- Jika Anda ingin mencetak ke terminal, uncomment baris ini
-    return json_string
-
-func clear_all() -> void:
-    sws.clear()
-    emit_signal("batch_updated", {})
-
-# Simple search helper
-func find_entities_by_tag(tag: String) -> Array:
-    var out := []
-    if sws.has("entities") and sws["entities"] is Array:
-        for e in sws["entities"]:
-            if typeof(e) == TYPE_DICTIONARY and e.has("tags") and tag in e["tags"]:
-                out.append(e)
-    return out
+func print_world_status() -> void:
+	print("\n--- STATUS DUNIA NEOENGINE V1 ---")
+	for key in world_data:
+		print(" [GLOBAL] %s: %s" % [key, world_data[key]])
+	for entity_key in entity_data:
+		print(" [ENTITY] %s: %s" % [entity_key, entity_data[entity_key]])
+	print("---------------------------------\n")
