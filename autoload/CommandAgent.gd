@@ -18,6 +18,7 @@ var is_server_reachable: bool = false
 var last_check_time: float = 0.0
 
 func _ready() -> void:
+	# Inisialisasi dependensi
 	sws = get_node_or_null("/root/SharedWorldState")
 	orchestrator = get_node_or_null("/root/NeoEngineOrchestrator")
 	
@@ -29,15 +30,17 @@ func _ready() -> void:
 		print("CommandAgent: NeoEngineOrchestrator belum didaftarkan. Menggunakan Node placeholder.")
 		orchestrator = Node.new()
 
+	# Inisialisasi node HTTPRequest
 	http_request = HTTPRequest.new()
 	add_child(http_request)
-	# Menggunakan Callable untuk Godot 4
+	# Godot 4 menggunakan Callable untuk sinyal
 	http_request.request_completed.connect(_on_http_request_completed)
 	
 	print("CommandAgent: Siap. Server Termux di: %s" % TERMUX_WEBHOOK_URL)
 	_check_server_status()
 
-func _process(_delta: float) -> void: # PERBAIKAN: _delta
+# PERBAIKAN: Parameter _delta diberi underscore
+func _process(_delta: float) -> void: 
 	if Time.get_unix_time_from_system() - last_check_time > COMMAND_CHECK_INTERVAL:
 		_check_server_status()
 		last_check_time = Time.get_unix_time_from_system()
@@ -50,6 +53,10 @@ func _check_server_status() -> void:
 	if not is_instance_valid(http_request):
 		return
 		
+	# Pastikan http_request tidak sedang aktif sebelum mengirim request baru
+	if http_request.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
+		return
+
 	var error = http_request.request(TERMUX_WEBHOOK_URL, ["Content-Type: application/json"], HTTPClient.METHOD_GET)
 	if error != OK:
 		printerr("CommandAgent: Gagal mengirim permintaan status HTTP (Error: ", error, ").")
@@ -57,7 +64,8 @@ func _check_server_status() -> void:
 		if sws.has_method("set_data"):
 			sws.set_data("external_server_status", "DOWN")
 		
-func _on_http_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void: # PERBAIKAN: _headers
+# PERBAIKAN: Parameter _headers diberi underscore
+func _on_http_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void: 
 	
 	if result == HTTPRequest.RESULT_SUCCESS:
 		if response_code == 200:
@@ -77,18 +85,18 @@ func _on_http_request_completed(result: int, response_code: int, _headers: Packe
 			printerr("CommandAgent: Server merespons tapi kode non-200. Status Code: %d" % response_code)
 			is_server_reachable = false
 	else:
-		printerr("CommandAgent: Koneksi ke server Termux GAGAL (Result: %d)." % result)
+		printerr("CommandAgent: Koneksi ke server Termux GAGAL (Result: %d). Pastikan server Termux berjalan." % result)
 		is_server_reachable = false
 
 # --- Logika Pemrosesan Perintah ---
 
 func _process_incoming_command(json_string: String) -> void:
-	# PERBAIKAN UTAMA: Menggunakan JSON.parse_string() (Godot 4 Static Method)
-	var parsed_data = JSON.parse_string(json_string)
+	# PEMANGGILAN JSON YANG BENAR UNTUK GODOT 4.x
+	var parsed_data = JSON.parse_string(json_string) 
 	
-	# Jika parsing gagal, parsed_data akan bernilai null
+	# Guard clause: Jika parsing gagal (mengembalikan null)
 	if parsed_data == null:
-		printerr("CommandAgent: Gagal parsing JSON. String tidak valid.")
+		printerr("CommandAgent: Gagal parsing JSON. String tidak valid atau JSON malformed.")
 		return
 
 	if typeof(parsed_data) == TYPE_DICTIONARY and parsed_data.has("command_name"):
