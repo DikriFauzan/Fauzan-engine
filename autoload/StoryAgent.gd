@@ -2,7 +2,7 @@ extends Node
 
 ## StoryAgent - NeoEngine v1 (Hybrid Version)
 ## Generates structured scene_plan JSON (Blueprint) for the Orchestrator.
-## Handles both local fallback generation and future LLM bridge integration.
+## Menggunakan metode statis yang kompatibel dengan Godot 4.x untuk penyimpanan file.
 
 # --- Dependensi ---
 var sws: Node = null 
@@ -51,17 +51,14 @@ func generate_story_plan(prompt: String) -> void:
     var blueprint: Dictionary = _generate_local_plan(prompt)
     
     if orchestrator.has_method("execute_plan"):
-        # Setelah StoryAgent membuat plan, ia menyuruh Orchestrator untuk melaksanakannya.
         orchestrator.execute_plan(blueprint)
     
     generation_in_progress = false
 
 
 # --- LLM Integration (Future Use) ---
-
 func _request_llm_generation(prompt: String) -> void:
     var _constructed_prompt = _construct_llm_prompt(prompt) 
-    # bridge_node.request_llm_generation(_constructed_prompt, self, "_on_llm_response_received", "_on_llm_response_received_error")
     
     if sws:
         sws.set_data("story_generation_status", "in_progress")
@@ -96,7 +93,6 @@ func _construct_llm_prompt(user_prompt: String) -> String:
 # --- Local Fallback & Persistance ---
 
 func _generate_local_plan(prompt: String) -> Dictionary:
-    # Generate blueprint lokal jika tidak ada LLM / LLM error
     var blueprint: Dictionary = {
         "id": "scene_plan_" + str(Time.get_unix_time_from_system()),
         "script_id": "scene_plan_" + str(Time.get_unix_time_from_system()),
@@ -123,25 +119,22 @@ func _generate_local_plan(prompt: String) -> Dictionary:
     
     _save_plan_to_sws(blueprint)
     
-    # Menggunakan call_deferred untuk menghindari masalah timing saat Godot sedang startup
     call_deferred("_fallback_persist_local", blueprint) 
     return blueprint
 
 func _is_valid_plan_structure(plan: Dictionary) -> bool:
-    # Memeriksa kunci wajib
     return plan.has("world") and plan.has("characters") and plan.has("economy")
 
 func _save_plan_to_sws(plan: Dictionary) -> void:
     if sws and sws.has_method("set_data"):
-        # Menyimpan plan terakhir agar Orchestrator bisa mengambilnya
         sws.set_data("last_scene_plan", plan)
         print("StoryAgent: Blueprint saved to SharedWorldState (deferred). id=", plan.get("id", "unknown"))
     else:
         printerr("StoryAgent: SharedWorldState not available.")
 
 func _fallback_persist_local(blueprint: Dictionary) -> void:
-    # FIX 5: Menggunakan metode statis Godot 4 yang paling aman untuk membuat folder
-    # Karena LOCAL_PLAN_DIR menggunakan "user://", kita bisa menggunakan make_dir_recursive_absolute.
+    # FIX 6: Menggunakan metode statis Godot 4 yang paling aman untuk membuat folder
+    # Ini adalah satu-satunya cara yang harus bekerja untuk membuat folder user://
     var error_code = DirAccess.make_dir_recursive_absolute(LOCAL_PLAN_DIR)
     
     if error_code != OK and error_code != ERR_FILE_EXISTS:
@@ -157,5 +150,4 @@ func _fallback_persist_local(blueprint: Dictionary) -> void:
         f.store_string(JSON.stringify(blueprint, "\t")) 
         print("StoryAgent: fallback saved plan to ", fname)
     else:
-        # Menambahkan pesan error spesifik jika gagal
         printerr("StoryAgent: failed to write fallback plan to %s (Error: %d)" % [fname, FileAccess.get_open_error()])
