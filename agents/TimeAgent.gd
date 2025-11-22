@@ -31,7 +31,7 @@ func _ready() -> void:
 	
 	print("TimeAgent: Siap. Siklus akan berganti setiap %d detik." % CYCLE_DURATION_SECONDS)
 	
-	# Memperbarui status koneksi Termux di SWS (diperbarui oleh CommandAgent, tapi perlu dipanggil)
+	# Memperbarui status koneksi Termux di SWS 
 	var command_agent = get_node_or_null("/root/CommandAgent")
 	if command_agent and sws.has_method("set_data"):
 		sws.set_data("external_server_status", command_agent.is_server_reachable)
@@ -66,10 +66,8 @@ func _on_timeout() -> void:
 
 # Fungsi untuk memicu Agent yang berjalan setiap hari
 func _trigger_daily_agents() -> void:
-	print("TimeAgent: Memicu Agent Harian (misalnya: StoryAgent, EconomyAgent untuk laporan)...")
-	# LOGIKA INI AKAN DITAMBAHKAN SETELAH AGENT DIBUAT
+	print("TimeAgent: Memicu Agent Harian...")
 
 # Fungsi untuk memicu Agent yang berjalan setiap siklus
 func _trigger_cycle_agents(cycle: String) -> void:
 	print("TimeAgent: Memicu Agent Siklus (%s)..." % cycle)
-	# LOGIKA INI AKAN DITAMBAHKAN SETELAH AGENT DIBUAT
