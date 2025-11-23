@@ -1,4 +1,3 @@
-# autoload/GameMonitor.gd
 extends Node
 # GameMonitor - Collects runtime telemetry, tracks player events, sends to backend/SWS.
 # Uses a buffer to batch-send data for efficiency.
@@ -19,11 +18,13 @@ func _ready() -> void:
     add_child(send_timer)
     send_timer.connect("timeout", Callable(self, "_on_send_timer_timeout"))
 
-func track_event(event_type: String,  Dictionary = {}) -> void:
+# PERBAIKAN: Mengganti syntax 'Dictionary = {}' menjadi 'payload: Dictionary = {}' 
+# dan menggunakan 'payload' di dalamnya.
+func track_event(event_type: String, payload: Dictionary = {}) -> void:
     var event_entry = {
         "timestamp": Time.get_ticks_msec(),
         "type": event_type,
-        "data": data,
+        "data": payload, # Menggunakan 'payload' (yang tadinya 'data' dan error)
         "session_id": OS.get_unique_id(), # Or use a specific session ID from DataAgent
         "player_id": DataAgent.get_player_value("player_id", "unknown_player"), # Example access
     }
