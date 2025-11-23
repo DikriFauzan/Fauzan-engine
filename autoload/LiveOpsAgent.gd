@@ -1,4 +1,3 @@
-# autoload/LiveOpsAgent.gd
 extends Node
 # LiveOpsAgent - collects runtime telemetry and persist to user:// for analysis
 # Corrected UNUSED_PARAMETER warnings and added backend communication logic.
@@ -76,24 +75,32 @@ func _send_batch_to_backend() -> void:
         
     var batch_to_send: Array[Dictionary] = event_buffer.duplicate()
     event_buffer.clear() # Hapus buffer sebelum dikirim
+    
+    # --- PERBAIKAN LINE 88 ---
+    # Mendeklarasikan total_events di sini agar dapat diakses oleh kedua blok IF di bawah.
+    var total_events = batch_to_send.size()
 
     # Kirim ke SWS untuk pemantauan lokal
     if sws:
         # PENTING: Jangan kirim terlalu banyak data ke SWS. Contoh: hanya kirim total/ringkasan.
-        var total_events = batch_to_send.size()
         sws.call_deferred("set_data", "liveops_last_batch_size", total_events)
 
     # Kirim ke Backend API via Bridge
     if bridge_node:
         print("LiveOpsAgent: Sending telemetry batch to backend (", total_events, " events) via Bridge...")
-        var request_id = bridge_node.make_http_request(
-            "https://your-ai-core-api.com/v1/telemetry/event", # <-- Ganti dengan URL AI Core Anda
+        # Mengganti URL placeholder dengan alamat Uvicorn Anda di Termux (localhost:8000)
+        # NOTE: Telemetry seharusnya dikirim ke endpoint yang spesifik, misalnya:
+        # var api_url = "http://127.0.0.1:8000/api/telemetry/collect"
+        
+        # Menggunakan placeholder asli yang mungkin dikonfigurasi di tempat lain:
+        var _request_id = bridge_node.make_http_request(
+            "https://your-ai-core-api.com/v1/telemetry/event", # <-- Asumsi URL ini akan diganti di Godot
             JSON.stringify(batch_to_send),
             Callable(self, "_on_telemetry_request_completed"),
-            null, # Tidak perlu request_id eksternal
+            "", # request_id eksternal: String kosong
             HTTPClient.METHOD_POST
         )
-        # Jika request_id valid, kita anggap pengiriman berhasil.
+        # Perbaikan Line 89 (UNUSED_VARIABLE) diselesaikan dengan prefix '_request_id'
 
     else:
         # Jika Bridge tidak ada, kembalikan data ke buffer dan cetak error
@@ -102,7 +109,7 @@ func _send_batch_to_backend() -> void:
 
 # Callback dari NeoEngineBridge
 func _on_telemetry_request_completed(_request_id: String, result: int, response_code: int, _headers: PackedStringArray, _body: PackedByteArray) -> void:
-    # Perbaikan UNUSED_PARAMETER: Parameter 'headers' dan 'body' diganti menjadi '_headers' dan '_body'
+    # Perbaikan UNUSED_PARAMETER: Parameter 'request_id', 'headers' dan 'body' diawali underscore
     
     if result == HTTPRequest.RESULT_SUCCESS and response_code >= 200 and response_code < 300:
         print("LiveOpsAgent: Telemetry batch sent successfully (Code: ", response_code, ").")
