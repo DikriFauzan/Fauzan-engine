@@ -1,4 +1,14 @@
-{
+import uvicorn
+import json
+import hmac
+import hashlib
+from fastapi import FastAPI, Request, HTTPException, status
+from pydantic import BaseModel
+from typing import List, Dict, Any, Optional
+
+# --- 1. Konfigurasi WhatsApp Webhook ---
+# Biasanya, konfigurasi ini dimuat dari file JSON.
+WHATSAPP_CONFIG = {
   "id": "whatsapp_webhook_config_example_1",
   "name": "WhatsApp Business API Webhook Config",
   "description": "Configuration for receiving and parsing messages from WhatsApp Business API.",
@@ -6,25 +16,161 @@
   "author": "NeoEngine v1",
   "timestamp": 1732012800,
   "webhook_config": {
-    "endpoint": "/webhook/whatsapp", // Path where Meta API will send POST requests
-    "verify_token": "your_verify_token_here", // Token for initial webhook verification
-    "admin_phone_numbers": [ // List of authorized admin numbers
+    "endpoint": "/webhook/whatsapp",
+    "verify_token": "your_verify_token_here",  # GANTI DENGAN VERIFY_TOKEN ASLI ANDA
+    "admin_phone_numbers": [
       "+1234567890",
       "+0987654321"
     ],
     "message_processing": {
-      "enabled": true,
-      "command_prefix": "/", // Commands start with /
+      "enabled": True,
+      "command_prefix": "/",
       "default_response": "Command not recognized. Use /help for list.",
-      "max_message_length": 4096 // Max length of message to process
+      "max_message_length": 4096
     },
     "security": {
-      "validate_signature": true, // Validate X-Hub-Signature-256 header
-      "signature_secret": "your_webhook_secret_here" // Secret used for signature calculation
+      "validate_signature": True,
+      "signature_secret": "your_webhook_secret_here"  # GANTI DENGAN WEBHOOK SECRET ASLI ANDA
     },
     "integration": {
-      "target_agent": "CommandAgent", // Which internal agent to forward parsed commands to
-      "event_on_receive": "whatsapp_message_received" // Event to emit internally
+      "target_agent": "CommandAgent",
+      "event_on_receive": "whatsapp_message_received"
     }
   }
 }
+
+app = FastAPI(title="WhatsApp Webhook Service")
+CONFIG = WHATSAPP_CONFIG['webhook_config']
+
+# Pydantic model untuk memvalidasi struktur dasar payload WhatsApp
+# Menggunakan Any karena struktur payload WhatsApp sangat kompleks dan dinamis.
+class WebhookPayload(BaseModel):
+    object: str
+    entry: List[Dict[str, Any]]
+
+# --- 2. Fungsi Validasi Tanda Tangan (HMAC SHA256) ---
+def verify_signature(request_data: bytes, signature_header: str) -> bool:
+    """Memverifikasi header X-Hub-Signature-256."""
+    if not CONFIG['security']['validate_signature']:
+        return True # Lewati validasi jika dinonaktifkan
+
+    if not signature_header:
+        # Jika signature diwajibkan tapi header tidak ada
+        print("SECURITY: Signature header missing.")
+        return False
+
+    # Format header adalah 'sha256=<signature_value>'
+    try:
+        sha_name, signature = signature_header.split('=')
+    except ValueError:
+        print(f"SECURITY: Invalid signature format: {signature_header}")
+        return False
+
+    if sha_name != 'sha256':
+        print(f"SECURITY: Unknown signature type: {sha_name}")
+        return False
+
+    secret = CONFIG['security']['signature_secret'].encode('utf-8')
+    
+    # Hitung HMAC dari data mentah (bytes) menggunakan secret key
+    # Jika Anda menerima error JSON, pastikan request_data di sini adalah data mentah HTTP body
+    calculated_signature = hmac.new(
+        secret, 
+        msg=request_data, 
+        digestmod=hashlib.sha256
+    ).hexdigest()
+
+    # Perbandingan aman (timing attack safe)
+    return hmac.compare_digest(calculated_signature, signature)
+
+# --- 3. Handler Verifikasi Webhook (GET Request) ---
+@app.get(CONFIG['endpoint'])
+async def verify_whatsapp_webhook(request: Request):
+    """Handler untuk verifikasi Webhook Meta/WhatsApp."""
+    query_params = request.query_params
+    
+    mode = query_params.get("hub.mode")
+    token = query_params.get("hub.verify_token")
+    challenge = query_params.get("hub.challenge")
+
+    if mode and token:
+        if mode == "subscribe" and token == CONFIG['verify_token']:
+            print(f"WEBHOOK: Verified subscription. Challenge: {challenge}")
+            return int(challenge)
+        else:
+            print(f"WEBHOOK: Verification failed. Invalid token or mode.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="Verification failed."
+            )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Missing hub.mode or hub.verify_token."
+    )
+
+# --- 4. Handler Pesan Webhook (POST Request) ---
+@app.post(CONFIG['endpoint'])
+async def handle_whatsapp_webhook(request: Request, payload: WebhookPayload):
+    """Handler untuk menerima dan memproses pesan WhatsApp."""
+    
+    # 1. Ambil data mentah (raw body) dan tanda tangan (signature)
+    raw_body = await request.body()
+    signature_header = request.headers.get("X-Hub-Signature-256", "")
+    
+    # 2. Validasi Tanda Tangan
+    if not verify_signature(raw_body, signature_header):
+        print("SECURITY: Invalid signature detected. Request rejected.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid signature"
+        )
+    
+    # 3. Proses Payload JSON (Payload sudah divalidasi oleh Pydantic)
+    print("\n--- WA Webhook Received ---")
+    print(f"Object: {payload.object}")
+    
+    if payload.object == "whatsapp_business_account":
+        for entry in payload.entry:
+            for change in entry.get("changes", []):
+                if change.get("field") == "messages":
+                    value = change.get("value", {})
+                    
+                    # Cek tipe pesan (misal: messages, statuses)
+                    if 'messages' in value:
+                        for message in value['messages']:
+                            # Lakukan pemrosesan pesan (misal: log, command dispatch)
+                            
+                            sender = message.get("from")
+                            message_type = message.get("type")
+                            
+                            # Log pesan masuk
+                            print(f"Message from {sender} (Type: {message_type})")
+
+                            # Contoh Pemrosesan Pesan Teks
+                            if message_type == "text":
+                                text_body = message["text"]["body"]
+                                print(f"-> Text: {text_body}")
+                                
+                                # Logika Command (menggunakan konfigurasi)
+                                if CONFIG['message_processing']['enabled'] and text_body.startswith(CONFIG['message_processing']['command_prefix']):
+                                    command = text_body.strip()
+                                    # TODO: Kirim command ke CommandAgent sesuai CONFIG['integration']['target_agent']
+                                    print(f"-> Dispatching Command: {command}")
+                                # else:
+                                    # TODO: Kirim pesan biasa (jika perlu)
+
+    print("--- WA Webhook Processed ---")
+    
+    # Penting: Meta mengharapkan response 200 OK untuk mengkonfirmasi penerimaan
+    return {"status": "success", "message": "EVENT_RECEIVED"}
+
+# --- 5. Konfigurasi Run Server ---
+if __name__ == "__main__":
+    # Ganti secret dan token placeholder sebelum dijalankan
+    if CONFIG['verify_token'] == "your_verify_token_here" or CONFIG['security']['signature_secret'] == "your_webhook_secret_here":
+        print("!!! WARNING: PLEASE UPDATE 'verify_token' and 'signature_secret' in WHATSAPP_CONFIG !!!")
+    
+    # Jalankan server di localhost:8000
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("WhatsApp Webhook Server Started at http://0.0.0.0:8000")
