@@ -63,9 +63,12 @@ func make_http_request(url: String, body: String, response_callback: Callable, e
 
     var headers_to_use = custom_headers.duplicate()
     if method == HTTPClient.METHOD_POST:
+        # Pastikan Content-Type disetel untuk POST/JSON
         headers_to_use.append("Content-Type: application/json")
 
-    var error = http_request.request(url, headers_to_use, method, body.to_utf8_buffer())
+    # Perbaikan Line 68: Mengubah PackedByteArray kembali menjadi String untuk argumen ke-4.
+    # Godot akan melakukan encoding menjadi PackedByteArray secara internal, yang lebih stabil.
+    var error = http_request.request(url, headers_to_use, method, body)
     
     if error != OK:
         printerr("NeoEngineBridge: Failed to start HTTP request (", request_id, "): ", error)
@@ -100,7 +103,8 @@ func _on_general_http_request_completed(result: int, response_code: int, headers
 
 # --- LLM Specific Functions (Contoh Simulasi, tetap dipertahankan) ---
 
-func request_llm_generation(user_prompt: String, callback_info: Dictionary) -> String:
+# Perbaikan Line 103: Mengganti user_prompt menjadi _user_prompt
+func request_llm_generation(_user_prompt: String, callback_info: Dictionary) -> String:
     # ... (Fungsi LLM tetap sama, hanya bagian _on_llm_http_request_completed yang akan dipanggil) ...
     
     var request_id = "llm_" + str(request_counter)
