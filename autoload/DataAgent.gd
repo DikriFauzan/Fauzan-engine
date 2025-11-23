@@ -1,11 +1,11 @@
-# autoload/DataAgent.gd
 extends Node
 # DataAgent - Manages persistent player data (status, inventory, quest progress).
 # Saves/loads to/from SharedWorldState or local file (user://) as fallback.
 
 const PLAYER_DATA_FILE := "user://player_data.json"
 
-var player_ Dictionary = {}
+# PERBAIKAN LINE 8: Mengganti 'var player_ Dictionary' menjadi 'var player_data: Dictionary'
+var player_data: Dictionary = {}
 
 func _ready() -> void:
     print("DataAgent ready. PID: ", get_instance_id())
