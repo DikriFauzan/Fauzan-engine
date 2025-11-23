@@ -1,12 +1,11 @@
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status, Response
 from pydantic import BaseModel
 import logging
-import os # Digunakan untuk menyimpan token
-import json # Digunakan untuk membaca body request WhatsApp
+import os 
+import json 
 
 # --- KONFIGURASI ---
 # Setel token verifikasi di sini. Gunakan token yang sama yang Anda masukkan ke Meta.
-# NOTE: Karena Anda sudah memasukkannya ke Meta, pastikan ini sama.
 VERIFY_TOKEN = "NEO_WA_2025" 
 
 # Konfigurasi logging dasar
@@ -67,6 +66,7 @@ async def sync_economy(request: EconomyRequest):
 async def verify_webhook(request: Request):
     """
     1. Verifikasi Token Webhook Meta (GET request).
+       Endpoint ini dipanggil oleh Meta saat Anda menekan tombol 'Verify and Save'.
     """
     try:
         # Mengambil parameter dari URL
@@ -76,19 +76,20 @@ async def verify_webhook(request: Request):
 
         if mode and token:
             if mode == "subscribe" and token == VERIFY_TOKEN:
-                logging.info(f"WEBHOOK: Verified subscription. Challenge: {challenge}")
-                # Mengembalikan challenge untuk verifikasi sukses
-                return challenge
+                logging.info(f"[WHATSAPP] Verified subscription. Challenge: {challenge}")
+                # Mengembalikan challenge untuk verifikasi sukses (Wajib 200 OK)
+                return Response(content=challenge, media_type="text/plain", status_code=200)
             else:
-                logging.warning("WEBHOOK: Token mismatch or mode not subscribe.")
+                logging.warning("[WHATSAPP] Token mismatch or mode not subscribe.")
                 # Token tidak cocok atau mode salah
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Verification failed")
         else:
-            logging.warning("WEBHOOK: Missing mode or token in request.")
+            logging.warning("[WHATSAPP] Missing mode or token in request.")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing parameters")
 
     except Exception as e:
-        logging.error(f"Verification error: {e}")
+        logging.error(f"[WHATSAPP] Verification error: {e}")
+        # Gunakan HTTP 500 jika ada masalah server
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server error during verification")
 
 
@@ -99,7 +100,7 @@ async def receive_webhook(request: Request):
     """
     try:
         data = await request.json()
-        logging.info(f"WEBHOOK: Received data:\n{json.dumps(data, indent=2)}")
+        logging.info(f"[WHATSAPP] Received data:\n{json.dumps(data, indent=2)}")
 
         # Logika Placeholder: 
         # Di sini Anda akan mengurai pesan dan memicu respons jika diperlukan.
@@ -108,7 +109,7 @@ async def receive_webhook(request: Request):
         return {"status": "ok"}
         
     except Exception as e:
-        logging.error(f"Error processing webhook data: {e}")
+        logging.error(f"[WHATSAPP] Error processing webhook data: {e}")
         # Tetap kembalikan 200 OK agar Meta tidak terus mengirim ulang
         return {"status": "error", "message": "Failed to process data"}, status.HTTP_200_OK
 
@@ -118,3 +119,7 @@ async def receive_webhook(request: Request):
 async def health_check():
     """Endpoint untuk Godot memverifikasi koneksi."""
     return {"status": "ok", "service": "AI_CORE_API", "version": "1.0-whatsapp-ready"}
+
+# Bagian ini penting jika Anda menjalankannya tanpa `python -m uvicorn ...`
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8080)
