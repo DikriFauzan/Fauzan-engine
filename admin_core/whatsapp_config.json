@@ -1,0 +1,27 @@
+{
+  "id": "whatsapp_webhook_config_example_1",
+  "name": "WhatsApp Business API Webhook Config",
+  "description": "Configuration data for WhatsApp Webhook.",
+  "webhook_config": {
+    "endpoint": "/webhook/whatsapp",
+    "verify_token": "NEO_WA_2025", 
+    "admin_phone_numbers": [
+      "+6285773292895",
+      "+0987654321"
+    ],
+    "message_processing": {
+      "enabled": true,
+      "command_prefix": "/",
+      "default_response": "Command not recognized. Use /help for list.",
+      "max_message_length": 4096
+    },
+    "security": {
+      "validate_signature": true,
+      "signature_secret": "NEO_WEBHOOK_SECRET_2025"
+    },
+    "integration": {
+      "target_agent": "CommandAgent",
+      "event_on_receive": "whatsapp_message_received"
+    }
+  }
+}
